@@ -55,11 +55,14 @@ namespace wpf_scrollviewer
 				Cursors.SizeNESW, Cursors.SizeNS, Cursors.SizeNWSE
 			};
 
+
+		bool isPushed;
+		Point lastPos = new Point(0, 0);
+		int movingIndex;
+
 		public Item()
 		{
 			InitializeComponent();
-
-			const double minWidth = 30;
 
 			List<Rectangle> listRectangle = new List<Rectangle>{
 				Rectangle00,
@@ -72,33 +75,26 @@ namespace wpf_scrollviewer
 				Rectangle22
 			};
 
-
-
-			bool isPushed = false;
-			Point lastPos = new Point(0, 0);
-
-			FrameworkElement parent = Parent as FrameworkElement;
-
-
 			for (int i = 0; i < 8; i++)
 			{
 				Rectangle rectangle = listRectangle[i];
+				int index = i;
 				Cursor cursor = listCursor[i];
-				double modifyX = listModifyX[i];
-				double modifyY = listModifyY[i];
-				double modifyWidth = listModifyWidth[i];
-				double modifyHeight = listModifyHeight[i];
 
 				rectangle.MouseLeave += (sender, e) =>
 				{
 					Cursor = Cursors.Arrow;
-					isPushed = false;
+
+					if (isPushed == true)
+					{
+						move(e.GetPosition(Parent as FrameworkElement), index);
+					}
 				};
 
 				rectangle.MouseLeftButtonDown += (sender, e) =>
 				{
 					isPushed = true;
-					lastPos = e.GetPosition(parent);
+					lastPos = e.GetPosition(Parent as FrameworkElement);
 				};
 
 				rectangle.MouseLeftButtonUp += (sender, e) =>
@@ -111,45 +107,58 @@ namespace wpf_scrollviewer
 					Cursor = cursor;
 					if (isPushed)
 					{
-						var curPos = e.GetPosition(parent);
-						double dx = curPos.X - lastPos.X;
-						double dy = curPos.Y - lastPos.Y;
-
-						double x = Margin.Left;
-						double y = Margin.Top;
-						double width = Width;
-						double height = Height;
-
-						double nuWidth = width + dx * modifyWidth;
-						double nuX = x;
-						if (nuWidth < minWidth)
-						{
-							nuWidth = minWidth;
-						}
-						else
-						{
-							nuX = x + dx * modifyX;
-						}
-
-						double nuHeight = height + dy * modifyHeight;
-						double nuY = y;
-						if (nuHeight < minWidth)
-						{
-							nuHeight = minWidth;
-						}
-						else
-						{
-							nuY = y + dy * modifyY;
-						}
-
-						Margin = new Thickness(nuX, nuY, 0, 0);
-						Width = nuWidth;
-						Height = nuHeight;
-
-						lastPos = curPos;
+						move(e.GetPosition(Parent as FrameworkElement), index);
 					}
 				};
 			}
+		}
+
+		void move(Point curPos, int i)
+		{
+			const double minWidth = 30;
+			double modifyX = listModifyX[i];
+			double modifyY = listModifyY[i];
+			double modifyWidth = listModifyWidth[i];
+			double modifyHeight = listModifyHeight[i];
+
+
+
+			double dx = curPos.X - lastPos.X;
+			double dy = curPos.Y - lastPos.Y;
+
+			double x = Margin.Left;
+			double y = Margin.Top;
+			double width = Width;
+			double height = Height;
+
+			double nuWidth = width + dx * modifyWidth;
+			double nuX = x;
+			if (nuWidth < minWidth)
+			{
+				nuWidth = minWidth;
+			}
+			else
+			{
+				nuX = x + dx * modifyX;
+			}
+
+			double nuHeight = height + dy * modifyHeight;
+			double nuY = y;
+			if (nuHeight < minWidth)
+			{
+				nuHeight = minWidth;
+			}
+			else
+			{
+				nuY = y + dy * modifyY;
+			}
+
+			Margin = new Thickness(nuX, nuY, 0, 0);
+			Width = nuWidth;
+			Height = nuHeight;
+
+			lastPos = curPos;
+
 		}
 
 		private void Rectangle_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)

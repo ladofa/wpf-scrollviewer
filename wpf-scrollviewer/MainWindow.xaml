@@ -6,10 +6,11 @@
         xmlns:local="clr-namespace:wpf_scrollviewer"
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
-    <Grid>
+	<Grid>
 		<!--<local:ScrollViewer x:Name="ScrollViewer">
 		</local:ScrollViewer>-->
 
-		<local:Item Margin="50, 50, 50, 50" Width="100" Height="100" Loaded="Item_Loaded"/>
+		<local:Item Margin="50,50,0,0" Width="126" Height="190" Loaded="Item_Loaded"/>
+		<local:Item Margin="200, 50, 50, 50" Width="100" Height="100" Loaded="Item_Loaded"/>
 	</Grid>
 </Window>
