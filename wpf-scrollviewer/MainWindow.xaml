@@ -7,7 +7,9 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
     <Grid>
-		<local:ScrollViewer x:Name="ScrollViewer">
-		</local:ScrollViewer>
+		<!--<local:ScrollViewer x:Name="ScrollViewer">
+		</local:ScrollViewer>-->
+
+		<local:Item Margin="50, 50, 50, 50" Width="100" Height="100" Loaded="Item_Loaded"/>
 	</Grid>
 </Window>

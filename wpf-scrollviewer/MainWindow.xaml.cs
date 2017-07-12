@@ -23,6 +23,19 @@ namespace wpf_scrollviewer
 		public MainWindow()
 		{
 			InitializeComponent();
+
+			Image image = new Image();
+			BitmapImage source = new BitmapImage();
+			source.BeginInit();
+			source.UriSource = new Uri("Clipboard01.png", UriKind.RelativeOrAbsolute);
+			source.EndInit();
+			image.Source = source;
+			//ScrollViewer.Content = image;
+		}
+
+		private void Item_Loaded(object sender, RoutedEventArgs e)
+		{
+
 		}
 	}
 }

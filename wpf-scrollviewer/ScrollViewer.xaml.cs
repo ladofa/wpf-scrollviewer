@@ -20,10 +20,22 @@ namespace wpf_scrollviewer
 	/// </summary>
 	public partial class ScrollViewer : UserControl
 	{
-		public UIElement Content
+		public System.Windows.FrameworkElement Content
 		{
-			get => (UIElement)GridContent.Children[0];
-			set => GridContent.Children[0] = value;
+			get => (System.Windows.FrameworkElement)GridContent.Children[0];
+			set 
+			{
+				GridContent.Children.Clear();
+				GridContent.Children.Add(value);
+				Rect view = new Rect(0, 0, value.ActualWidth, value.ActualHeight);
+				ViewArea = view;
+				value.SizeChanged += Value_SizeChanged;
+			}
+		}
+
+		private void Value_SizeChanged(object sender, SizeChangedEventArgs e)
+		{
+			ZoomInFull();
 		}
 
 		Point? lastCenterPositionOnTarget;
@@ -43,7 +55,104 @@ namespace wpf_scrollviewer
 			scrollViewer.MouseMove += OnMouseMove;
 
 			slider.ValueChanged += OnSliderValueChanged;
+
+			ZoomInFull();
 		}
+
+
+		Rect viewArea = new Rect();
+
+		public double Scale
+		{
+			get => scaleTransform.ScaleX;
+		}
+
+		public Rect ViewArea
+		{
+			set
+			{
+				double windowWidth = scrollViewer.ViewportWidth;
+				double windowHeight = scrollViewer.ViewportHeight;
+				double windowRate = windowWidth / windowHeight;
+
+				if (windowWidth == 0)
+				{
+					windowWidth = scrollViewer.ActualWidth;
+					windowHeight = scrollViewer.ActualHeight;
+				}
+
+				double a = GridContent.Width;
+
+				//double contentWidth = scrollViewer.ExtentWidth;
+				//double contentHeight = scrollViewer.ExtentHeight; 
+				double contentWidth = grid.ActualWidth;
+				double contentHeight = grid.ActualHeight;
+				double contentRate = contentWidth / contentHeight;
+
+				//oriented in content.
+				Rect rect = value;
+
+				if (rect.Width == 0 || contentWidth == 0 || windowWidth == 0)
+				{
+					viewArea = rect;
+					return;
+				}
+
+				//--decide scale
+				//allowed by scrollViewer
+				double minScale = Math.Min(windowWidth / contentWidth, windowHeight / contentHeight);
+				
+
+				double scaleX = Math.Max(windowWidth / rect.Width, minScale);
+				double scaleY = Math.Max(windowHeight / rect.Height, minScale);
+
+				double scale;
+				//(x or y) axis should be extended.
+				if (scaleX > scaleY)
+				{
+					scale = scaleY;
+					double oldWidth = rect.Width;
+					rect.Width = windowWidth / scale;
+					rect.X -= (rect.Width - oldWidth) / 2;//extend from center
+				}
+				else
+				{
+					scale = scaleX;
+					double oldHeight = rect.Height;
+					rect.Height = windowHeight / scale;
+					rect.Y -= (rect.Height - oldHeight) / 2;
+				}
+
+				scaleTransform.ScaleX = scale;
+				scaleTransform.ScaleY = scale;
+
+				
+
+				//scale = scaleTransform.ScaleX;
+
+
+				//double extendedWidth = contentWidth * scale;
+				//double extendedHeight = contentHeight * scale;
+
+				scrollViewer.ScrollToHorizontalOffset(rect.X * scale);
+				scrollViewer.ScrollToVerticalOffset(rect.Y * scale);
+
+				//viewArea = rect;
+			}
+
+			get
+			{
+				return viewArea;
+			}
+		}
+
+		void ZoomInFull()
+		{
+			ViewArea = new Rect(0, 0, GridContent.ActualWidth, GridContent.ActualHeight);
+		}
+
+
+		
 
 		void OnMouseMove(object sender, MouseEventArgs e)
 		{
@@ -56,8 +165,17 @@ namespace wpf_scrollviewer
 
 				lastDragPoint = posNow;
 
-				scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset - dX);
-				scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset - dY);
+				//scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset - dX);
+				//scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset - dY);
+
+				Rect rect = ViewArea;
+
+				rect.X -= dX / Scale;
+				rect.Y -= dY / Scale;
+
+				ViewArea = rect;
+
+				Point pos = e.GetPosition(GridContent);
 			}
 		}
 
@@ -75,16 +193,37 @@ namespace wpf_scrollviewer
 
 		void OnPreviewMouseWheel(object sender, MouseWheelEventArgs e)
 		{
-			lastMousePositionOnTarget = Mouse.GetPosition(grid);
-
+			double scale = 1;
 			if (e.Delta > 0)
 			{
-				slider.Value += 1;
+				scale /= 1.2;
 			}
 			if (e.Delta < 0)
 			{
-				slider.Value -= 1;
+				scale *= 1.2;
 			}
+
+			lastMousePositionOnTarget = Mouse.GetPosition(grid);
+
+			Point pos = e.GetPosition(GridContent);
+
+			Rect view = ViewArea;
+
+			double nuWidth = view.Width * scale;
+			double nuHeight = view.Height * scale;
+
+			// leftSide / total width
+			double rateX = (pos.X - view.X) / view.Width;
+			view.X -= (nuWidth - view.Width) * rateX;
+
+			//topSide / total height
+			double rateY = (pos.Y - view.Y) / view.Height;
+			view.Y -= (nuHeight - view.Height) * rateY;
+
+			view.Width = nuWidth;
+			view.Height = nuHeight;
+
+			ViewArea = view;
 
 			e.Handled = true;
 		}
@@ -109,53 +248,34 @@ namespace wpf_scrollviewer
 
 		void OnScrollViewerScrollChanged(object sender, ScrollChangedEventArgs e)
 		{
-			if (e.ExtentHeightChange != 0 || e.ExtentWidthChange != 0)
+			double scale = Scale;
+			if (double.IsNaN(scale))
 			{
-				Point? targetBefore = null;
-				Point? targetNow = null;
+				//scale = 1;
+			}
 
-				if (!lastMousePositionOnTarget.HasValue)
+			
+			if (scale != 0)
+			{
+				viewArea.X = scrollViewer.HorizontalOffset / scale;
+				viewArea.Y = scrollViewer.VerticalOffset / scale;
+				viewArea.Width = scrollViewer.ViewportWidth / scale;
+				viewArea.Height = scrollViewer.ViewportHeight / scale;
+
+				double contentWidth = GridContent.ActualWidth;
+				double contentHeight = GridContent.ActualHeight;
+
+				if (viewArea.Width > contentWidth)
 				{
-					if (lastCenterPositionOnTarget.HasValue)
-					{
-						var centerOfViewport = new Point(scrollViewer.ViewportWidth / 2,
-														 scrollViewer.ViewportHeight / 2);
-						Point centerOfTargetNow =
-							  scrollViewer.TranslatePoint(centerOfViewport, grid);
-
-						targetBefore = lastCenterPositionOnTarget;
-						targetNow = centerOfTargetNow;
-					}
-				}
-				else
-				{
-					targetBefore = lastMousePositionOnTarget;
-					targetNow = Mouse.GetPosition(grid);
-
-					lastMousePositionOnTarget = null;
+					viewArea.X -= (viewArea.Width - contentWidth) / 2;
 				}
 
-				if (targetBefore.HasValue)
+				if (viewArea.Height > contentHeight)
 				{
-					double dXInTargetPixels = targetNow.Value.X - targetBefore.Value.X;
-					double dYInTargetPixels = targetNow.Value.Y - targetBefore.Value.Y;
-
-					double multiplicatorX = e.ExtentWidth / grid.Width;
-					double multiplicatorY = e.ExtentHeight / grid.Height;
-
-					double newOffsetX = scrollViewer.HorizontalOffset -
-										dXInTargetPixels * multiplicatorX;
-					double newOffsetY = scrollViewer.VerticalOffset -
-										dYInTargetPixels * multiplicatorY;
-
-					if (double.IsNaN(newOffsetX) || double.IsNaN(newOffsetY))
-					{
-						return;
-					}
-
-					scrollViewer.ScrollToHorizontalOffset(newOffsetX);
-					scrollViewer.ScrollToVerticalOffset(newOffsetY);
+					viewArea.Y -= (viewArea.Height - contentHeight) / 2;
 				}
+
+				Console.WriteLine(viewArea);
 			}
 		}
 	}
