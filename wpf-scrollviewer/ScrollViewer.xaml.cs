@@ -33,9 +33,28 @@ namespace wpf_scrollviewer
 			}
 		}
 
+		public Item AddItem(Rect rect)
+		{
+			Item item = new Item();
+			item.ScrollViewer = this;
+			SelectedItem = item;
+			return item;
+		}
+
+		public List<Rect> GetAllRects()
+		{
+			List<Rect> result = new List<Rect>();
+			foreach (Item item in GridItem.Children)
+			{
+				result.Add(item.Rect);
+			}
+
+			return result;
+		}
+
 		private void Value_SizeChanged(object sender, SizeChangedEventArgs e)
 		{
-			ZoomInFull();
+			//ZoomInFull();
 		}
 
 		Point? lastCenterPositionOnTarget;
@@ -47,24 +66,116 @@ namespace wpf_scrollviewer
 			InitializeComponent();
 
 			scrollViewer.ScrollChanged += OnScrollViewerScrollChanged;
-			scrollViewer.MouseLeftButtonUp += OnMouseLeftButtonUp;
-			scrollViewer.PreviewMouseLeftButtonUp += OnMouseLeftButtonUp;
 			scrollViewer.PreviewMouseWheel += OnPreviewMouseWheel;
 
-			scrollViewer.PreviewMouseLeftButtonDown += OnMouseLeftButtonDown;
-			scrollViewer.MouseMove += OnMouseMove;
+			//버튼 다운은 아무 객체에서부터
+			GridContent.MouseLeftButtonDown += OnMouseLeftButtonDown;
+
+			//그냥 모드를 결정하는 무브
+			GridContent.MouseMove += OnMouseMove;
+			//버튼다운 상태에서 무브.. 는 스크롤 뷰어에서만 이벤트 캡쳐해서 처리
+			scrollViewer.MouseMove += ScrollViewer_MouseMove;
+
+			//버튼 업도 스크롤 뷰에어서만 담당하게 된다.
+			scrollViewer.PreviewMouseLeftButtonUp += OnMouseLeftButtonUp;			
+
+			//생성
+			scrollViewer.PreviewMouseRightButtonDown += ScrollViewer_PreviewMouseRightButtonDown;
+			scrollViewer.PreviewMouseRightButtonUp += ScrollViewer_PreviewMouseRightButtonUp;
 
 			slider.ValueChanged += OnSliderValueChanged;
 
 			ZoomInFull();
+
+
+			foreach (Item item in GridItem.Children)
+			{
+				item.ScrollViewer = this;
+			}
 		}
 
+		//creating
+		Point creatingStart;
+		private void ScrollViewer_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+		{
+			MoveMode = MoveModes.Creating;
+			creatingStart = e.GetPosition(GridContent);
+			Item nuItem = AddItem(new Rect(0, 0, 0, 0));
+			MouseButtonDownHandler(nuItem, e);
+		}
+
+		private void ScrollViewer_PreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
+		{
+			scrollViewer.ReleaseMouseCapture();
+			lastDragPoint = null;
+			MoveMode = MoveModes.None;
+		}
+
+
+		private void ScrollViewer_MouseMove(object sender, MouseEventArgs e)
+		{
+			if (lastDragPoint.HasValue)
+			{
+				if (moveMode == MoveModes.MoveAll)
+				{
+					Point posNow = e.GetPosition(scrollViewer);
+
+					double dX = posNow.X - lastDragPoint.Value.X;
+					double dY = posNow.Y - lastDragPoint.Value.Y;
+
+					lastDragPoint = posNow;
+
+					//scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset - dX);
+					//scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset - dY);
+
+					Rect rect = ViewArea;
+
+					rect.X -= dX / Scale;
+					rect.Y -= dY / Scale;
+
+					ViewArea = rect;
+
+					Point pos = e.GetPosition(GridContent);
+				}
+				else if (moveMode == MoveModes.Creating)
+				{
+					Point posNow = e.GetPosition(GridContent);
+
+					double x = Math.Min(creatingStart.X, posNow.X);
+					double y = Math.Min(creatingStart.Y, posNow.Y);
+					double width = Math.Abs(creatingStart.X - posNow.X);
+					double height = Math.Abs(creatingStart.Y - posNow.Y);
+
+					SelectedItem.Rect = new Rect(x, y, width, height);
+				}
+				else if (SelectedItem != null)
+				{
+					SelectedItem.Move(e, (int)moveMode);
+				}
+			}
+			else
+			{
+				
+			}
+		}
+
+		
 
 		Rect viewArea = new Rect();
 
 		public double Scale
 		{
 			get => scaleTransform.ScaleX;
+			set
+			{
+				scaleTransform.ScaleX = value;
+				scaleTransform.ScaleY = value;
+
+				if (SelectedItem != null)
+				{
+					SelectedItem.UiWidth = Item.DefaultUiWidth / value;
+				}
+			}
 		}
 
 		public Rect ViewArea
@@ -123,13 +234,7 @@ namespace wpf_scrollviewer
 					rect.Y -= (rect.Height - oldHeight) / 2;
 				}
 
-				scaleTransform.ScaleX = scale;
-				scaleTransform.ScaleY = scale;
-
-				
-
-				//scale = scaleTransform.ScaleX;
-
+				Scale = scale;
 
 				//double extendedWidth = contentWidth * scale;
 				//double extendedHeight = contentHeight * scale;
@@ -150,9 +255,6 @@ namespace wpf_scrollviewer
 		{
 			ViewArea = new Rect(0, 0, GridContent.ActualWidth, GridContent.ActualHeight);
 		}
-
-
-		
 
 		void OnMouseMove(object sender, MouseEventArgs e)
 		{
@@ -177,18 +279,16 @@ namespace wpf_scrollviewer
 
 				Point pos = e.GetPosition(GridContent);
 			}
+			else
+			{
+				MoveMode = MoveModes.MoveAll;
+			}
 		}
 
 		void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
 		{
-			var mousePos = e.GetPosition(scrollViewer);
-			if (mousePos.X <= scrollViewer.ViewportWidth && mousePos.Y <
-				scrollViewer.ViewportHeight) //make sure we still can use the scrollbars
-			{
-				scrollViewer.Cursor = Cursors.SizeAll;
-				lastDragPoint = mousePos;
-				Mouse.Capture(scrollViewer);
-			}
+			MouseButtonDownHandler(null, e);
+			//Mouse.Capture(scrollViewer);
 		}
 
 		void OnPreviewMouseWheel(object sender, MouseWheelEventArgs e)
@@ -224,13 +324,10 @@ namespace wpf_scrollviewer
 			view.Height = nuHeight;
 
 			ViewArea = view;
-
-			e.Handled = true;
 		}
 
 		void OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
 		{
-			scrollViewer.Cursor = Cursors.Arrow;
 			scrollViewer.ReleaseMouseCapture();
 			lastDragPoint = null;
 		}
@@ -238,8 +335,7 @@ namespace wpf_scrollviewer
 		void OnSliderValueChanged(object sender,
 			 RoutedPropertyChangedEventArgs<double> e)
 		{
-			scaleTransform.ScaleX = e.NewValue;
-			scaleTransform.ScaleY = e.NewValue;
+			Scale = e.NewValue;
 
 			var centerOfViewport = new Point(scrollViewer.ViewportWidth / 2,
 											 scrollViewer.ViewportHeight / 2);
@@ -274,9 +370,124 @@ namespace wpf_scrollviewer
 				{
 					viewArea.Y -= (viewArea.Height - contentHeight) / 2;
 				}
-
-				Console.WriteLine(viewArea);
 			}
 		}
+
+		//---------------------------------------------------------------------------------------
+
+		Item selectedItem = null;
+		public Item SelectedItem
+		{
+			get
+			{
+				return selectedItem;
+			}
+
+			set
+			{
+				if (selectedItem != null)
+				{
+					selectedItem.Selected = false;
+				}
+
+				if (value != null)
+				{
+					value.Selected = true;
+					value.UiWidth = Item.DefaultUiWidth / Scale;
+				}
+
+				selectedItem = value;
+			}
+		}
+
+		public enum MoveModes : int
+		{
+			LeftTop = 0,
+			Top = 1,
+			RightTop = 2,
+			Left = 3,
+			Right = 4,
+			LeftBottom = 5,
+			Bottom = 6,
+			RightBottom = 7,
+			MoveSelected = 8,
+
+			MoveAll,
+			None,
+			Creating
+		}
+
+		MoveModes moveMode;
+		public MoveModes MoveMode
+		{
+			set
+			{
+				if (lastDragPoint.HasValue)
+				{
+					return;
+				}
+
+				Console.WriteLine(value.ToString());
+				if (value == MoveModes.LeftTop)
+				{
+					Cursor = Cursors.SizeNWSE;
+				}
+				else if (value == MoveModes.Top)
+				{
+					Cursor = Cursors.SizeNS;
+				}
+				else if (value == MoveModes.RightTop)
+				{
+					Cursor = Cursors.SizeNESW;
+				}
+				else if (value == MoveModes.Left)
+				{
+					Cursor = Cursors.SizeWE;
+				}
+				else if (value == MoveModes.Right)
+				{
+					Cursor = Cursors.SizeWE;
+				}
+				else if (value == MoveModes.LeftBottom)
+				{
+					Cursor = Cursors.SizeNESW;
+				}
+				else if (value == MoveModes.Bottom)
+				{
+					Cursor = Cursors.SizeNS;
+				}
+				else if (value == MoveModes.RightBottom)
+				{
+					Cursor = Cursors.SizeNWSE;
+				}
+				else if (value == MoveModes.MoveSelected)
+				{
+					Cursor = Cursors.SizeAll;
+				}
+				else 
+				{
+					Cursor = Cursors.Arrow;
+				}
+				moveMode = value;
+			}
+
+			get
+			{
+				return moveMode;
+			}
+		}
+
+		public void MouseButtonDownHandler(Item sender, MouseEventArgs e)
+		{
+			SelectedItem = sender;
+
+			var mousePos = e.GetPosition(scrollViewer);
+			if (mousePos.X <= scrollViewer.ViewportWidth && mousePos.Y <
+				scrollViewer.ViewportHeight) //make sure we still can use the scrollbars
+			{
+				lastDragPoint = mousePos;
+				Mouse.Capture(scrollViewer);
+			}
+		}		
 	}
 }

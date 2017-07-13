@@ -30,10 +30,26 @@ namespace wpf_scrollviewer
 			source.UriSource = new Uri("Clipboard01.png", UriKind.RelativeOrAbsolute);
 			source.EndInit();
 			image.Source = source;
-			//ScrollViewer.Content = image;
+			ScrollViewer.Content = image;
 		}
 
-		private void Item_Loaded(object sender, RoutedEventArgs e)
+		private void ButtonLoadImage_Click(object sender, RoutedEventArgs e)
+		{
+			Microsoft.Win32.OpenFileDialog openFileDialog = new Microsoft.Win32.OpenFileDialog();
+			if (openFileDialog.ShowDialog() == true)
+			{
+				Image image = new Image();
+				BitmapImage source = new BitmapImage();
+				source.BeginInit();
+				source.UriSource = new Uri(openFileDialog.FileName, UriKind.RelativeOrAbsolute);
+				source.EndInit();
+				image.Source = source;
+				ScrollViewer.Content = image;
+			}
+				
+		}
+
+		private void ButtonAnother_Click(object sender, RoutedEventArgs e)
 		{
 
 		}

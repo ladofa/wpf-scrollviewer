@@ -8,27 +8,56 @@
              d:DesignHeight="300" d:DesignWidth="300" HorizontalAlignment="Left" VerticalAlignment="Top">
 	<Grid>
 		<Rectangle Stroke="Black" StrokeThickness="1" Grid.RowSpan="3" Grid.ColumnSpan="3"/>
-		<Grid Margin="-5, -5, -5, -5">
+		<Grid Margin="-5, -5, -5, -5" x:Name="GridMove">
 			<Grid.RowDefinitions>
-				<RowDefinition Height="10"/>
+				<RowDefinition Height="10" x:Name="row0"/>
 				<RowDefinition Height="*"/>
-				<RowDefinition Height="10"/>
+				<RowDefinition Height="10" x:Name="row1"/>
 			</Grid.RowDefinitions>
 			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="10"/>
+				<ColumnDefinition Width="10" x:Name="col0"/>
 				<ColumnDefinition Width="*"/>
-				<ColumnDefinition Width="10"/>
+				<ColumnDefinition Width="10" x:Name="col1"/>
 			</Grid.ColumnDefinitions>
 
-			<Rectangle Grid.Row="0" Grid.Column="0" x:Name="Rectangle00" Fill="White" Opacity="0"/>
-			<Rectangle Grid.Row="0" Grid.Column="1" x:Name="Rectangle01" Fill="White" Opacity="0"/>
-			<Rectangle Grid.Row="0" Grid.Column="2" x:Name="Rectangle02" Fill="White" Opacity="0"/>
-			<Rectangle Grid.Row="1" Grid.Column="0" x:Name="Rectangle10" Fill="White" Opacity="0"/>
-			<Rectangle Grid.Row="1" Grid.Column="2" x:Name="Rectangle12" Fill="White" Opacity="0"/>
-			<Rectangle Grid.Row="2" Grid.Column="0" x:Name="Rectangle20" Fill="White" Opacity="0"/>
-			<Rectangle Grid.Row="2" Grid.Column="1" x:Name="Rectangle21" Fill="White" Opacity="0"/>
-			<Rectangle Grid.Row="2" Grid.Column="2" x:Name="Rectangle22" Fill="White" Opacity="0"/>
+			<Rectangle Grid.Row="0" Grid.Column="0" x:Name="MoveRect00" Fill="White" Opacity="0"/>
+			<Rectangle Grid.Row="0" Grid.Column="1" x:Name="MoveRect01" Fill="White" Opacity="0"/>
+			<Rectangle Grid.Row="0" Grid.Column="2" x:Name="MoveRect02" Fill="White" Opacity="0"/>
+			<Rectangle Grid.Row="1" Grid.Column="0" x:Name="MoveRect10" Fill="White" Opacity="0"/>
+			<Rectangle Grid.Row="1" Grid.Column="2" x:Name="MoveRect12" Fill="White" Opacity="0"/>
+			<Rectangle Grid.Row="2" Grid.Column="0" x:Name="MoveRect20" Fill="White" Opacity="0"/>
+			<Rectangle Grid.Row="2" Grid.Column="1" x:Name="MoveRect21" Fill="White" Opacity="0"/>
+			<Rectangle Grid.Row="2" Grid.Column="2" x:Name="MoveRect22" Fill="White" Opacity="0"/>
 
 		</Grid>
+		
+		<Grid Margin="-5, -5, -5, -5" x:Name="GridSize">
+			<Grid.RowDefinitions>
+				<RowDefinition Height="10" x:Name="row2"/>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="10" x:Name="row3"/>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="10" x:Name="row4"/>
+			</Grid.RowDefinitions>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="10" x:Name="col2"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="10" x:Name="col3"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="10" x:Name="col4"/>
+			</Grid.ColumnDefinitions>
+
+			<Rectangle Grid.Row="0" Grid.Column="0" x:Name="Rectangle00" Fill="White" Stroke="Black"/>
+			<Rectangle Grid.Row="0" Grid.Column="2" x:Name="Rectangle01" Fill="White" Stroke="Black"/>
+			<Rectangle Grid.Row="0" Grid.Column="4" x:Name="Rectangle02" Fill="White" Stroke="Black"/>
+			<Rectangle Grid.Row="2" Grid.Column="0" x:Name="Rectangle10" Fill="White" Stroke="Black"/>
+			<Rectangle Grid.Row="2" Grid.Column="4" x:Name="Rectangle12" Fill="White" Stroke="Black"/>
+			<Rectangle Grid.Row="4" Grid.Column="0" x:Name="Rectangle20" Fill="White" Stroke="Black"/>
+			<Rectangle Grid.Row="4" Grid.Column="2" x:Name="Rectangle21" Fill="White" Stroke="Black"/>
+			<Rectangle Grid.Row="4" Grid.Column="4" x:Name="Rectangle22" Fill="White" Stroke="Black"/>
+
+		</Grid>
+
+		
 	</Grid>
 </UserControl>

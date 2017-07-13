@@ -5,12 +5,21 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:wpf_scrollviewer"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="MainWindow" Height="760" Width="1280">
 	<Grid>
-		<!--<local:ScrollViewer x:Name="ScrollViewer">
-		</local:ScrollViewer>-->
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="*"/>
+			<ColumnDefinition Width="150"/>
+		</Grid.ColumnDefinitions>
+		<local:ScrollViewer x:Name="ScrollViewer" Grid.Column="0"/>
 
-		<local:Item Margin="50,50,0,0" Width="126" Height="190" Loaded="Item_Loaded"/>
-		<local:Item Margin="200, 50, 50, 50" Width="100" Height="100" Loaded="Item_Loaded"/>
+
+		<StackPanel Grid.Column="1" Orientation="Vertical">
+			<Button x:Name="ButtonLoadImage" Click="ButtonLoadImage_Click" Content="Load Image" Height="30" Margin="3"/>
+			<Button x:Name="ButtonAnother" Click="ButtonAnother_Click" Content="Something Else" Height="30" Margin="3"/>
+		</StackPanel>
+
+		<!--<local:Item Margin="50,50,0,0" Width="126" Height="190"/>
+		<local:Item Margin="200, 50, 50, 50" Width="100" Height="100"/>-->
 	</Grid>
 </Window>

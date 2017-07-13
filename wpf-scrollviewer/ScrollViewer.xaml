@@ -24,10 +24,26 @@
 						<ScaleTransform x:Name="scaleTransform"/>
 					</TransformGroup>
 				</Grid.LayoutTransform>
+				
+				
+				
+				
 				<Viewbox Grid.Column="0" Grid.Row="0">
-					<Grid x:Name="GridContent">
-						<Image Source="Clipboard01.png"/>
-					</Grid>
+					<Grid>
+						<Grid x:Name="GridContent">
+							<Image Source="Clipboard01.png"/>
+						</Grid>
+
+						<Grid x:Name="GridItem">
+							<local:Item Margin="50,50,0,0" Width="126" Height="190"/>
+							<!-- here come items-->
+						</Grid>
+
+						<Grid x:Name="GridNew">
+
+						</Grid>
+					</Grid>	
+					
 				</Viewbox>
 			</Grid>
 
