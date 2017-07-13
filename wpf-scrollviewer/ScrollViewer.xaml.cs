@@ -36,7 +36,9 @@ namespace wpf_scrollviewer
 		public Item AddItem(Rect rect)
 		{
 			Item item = new Item();
+			item.Rect = rect;
 			item.ScrollViewer = this;
+			GridItem.Children.Add(item);
 			SelectedItem = item;
 			return item;
 		}
@@ -83,6 +85,8 @@ namespace wpf_scrollviewer
 			scrollViewer.PreviewMouseRightButtonDown += ScrollViewer_PreviewMouseRightButtonDown;
 			scrollViewer.PreviewMouseRightButtonUp += ScrollViewer_PreviewMouseRightButtonUp;
 
+			scrollViewer.KeyDown += ScrollViewer_KeyDown;
+
 			slider.ValueChanged += OnSliderValueChanged;
 
 			ZoomInFull();
@@ -91,6 +95,18 @@ namespace wpf_scrollviewer
 			foreach (Item item in GridItem.Children)
 			{
 				item.ScrollViewer = this;
+			}
+		}
+
+		private void ScrollViewer_KeyDown(object sender, KeyEventArgs e)
+		{
+			if (e.Key == Key.Delete || e.Key == Key.Back)
+			{
+				if (SelectedItem != null)
+				{
+					GridItem.Children.Remove(SelectedItem);
+					SelectedItem = null;
+				}
 			}
 		}
 
