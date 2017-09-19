@@ -189,7 +189,7 @@ namespace wpf_scrollviewer
 
 				if (SelectedItem != null)
 				{
-					SelectedItem.UiWidth = Item.DefaultUiWidth / value;
+					SelectedItem.UiWidth = value;
 				}
 			}
 		}
@@ -408,8 +408,8 @@ namespace wpf_scrollviewer
 
 				if (value != null)
 				{
+					value.UiWidth = Scale;
 					value.Selected = true;
-					value.UiWidth = Item.DefaultUiWidth / Scale;
 				}
 
 				selectedItem = value;

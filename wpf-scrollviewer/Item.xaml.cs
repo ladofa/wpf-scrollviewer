@@ -60,12 +60,13 @@ namespace wpf_scrollviewer
 		public static readonly double DefaultUiWidth = 10;
 
 		Point lastPos = new Point(0, 0);
+		List<Rectangle> listRectangle;
 
 		public Item()
 		{
 			InitializeComponent();
 
-			List<Rectangle> listRectangle = new List<Rectangle>{
+			listRectangle = new List<Rectangle>{
 				Rectangle00,
 				Rectangle01,
 				Rectangle02,
@@ -229,22 +230,27 @@ namespace wpf_scrollviewer
 
 			set
 			{
-				row0.Height = new GridLength(value);
-				row1.Height = new GridLength(value);
-				row2.Height = new GridLength(value);
-				row3.Height = new GridLength(value);
-				row4.Height = new GridLength(value);
 
-				col0.Width = new GridLength(value);
-				col1.Width = new GridLength(value);
-				col2.Width = new GridLength(value);
-				col3.Width = new GridLength(value);
-				col4.Width = new GridLength(value);
+				double v1 = Item.DefaultUiWidth / value;
 
-				double value2 = -value / 2;
+				row0.Height = new GridLength(v1);
+				row1.Height = new GridLength(v1);
+				row2.Height = new GridLength(v1);
+				row3.Height = new GridLength(v1);
+				row4.Height = new GridLength(v1);
+
+				col0.Width = new GridLength(v1);
+				col1.Width = new GridLength(v1);
+				col2.Width = new GridLength(v1);
+				col3.Width = new GridLength(v1);
+				col4.Width = new GridLength(v1);
+
+				double value2 = -v1 / 2;
 
 				GridMove.Margin = new Thickness(value2, value2, value2, value2);
 				GridSize.Margin = new Thickness(value2, value2, value2, value2);
+
+				listRectangle.ForEach(rect => rect.StrokeThickness = 1 / value);
 			}
 		}
 	}

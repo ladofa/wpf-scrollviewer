@@ -35,7 +35,7 @@
 						</Grid>
 
 						<Grid x:Name="GridItem">
-							<local:Item Margin="50,50,0,0" Width="126" Height="190"/>
+							
 							<!-- here come items-->
 						</Grid>
 
